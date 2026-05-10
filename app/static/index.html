@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Resume Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css?v=20260510b" />
+  </head>
+  <body class="theme-dark-ai prestart">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <div id="onboarding" class="overlay">
+      <div class="panel onboarding-panel">
+        <p class="eyebrow">AI Resume Analyzer</p>
+        <h1>Start with your name and a theme</h1>
+        <p class="muted">
+          Before you begin, the interface stays dark with white text. Log in with your name and password, or create
+          a new saved workspace by entering a new combination.
+        </p>
+
+        <label class="field">
+          <span>Your Name</span>
+          <input id="nameInput" type="text" maxlength="80" placeholder="Enter your name" />
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <div class="password-row">
+            <input id="passwordInput" type="password" maxlength="128" placeholder="Enter your password" />
+            <button id="togglePasswordButton" class="secondary-button icon-button" type="button" aria-label="Toggle password visibility">
+              &#128065;
+            </button>
+          </div>
+        </label>
+
+        <div class="theme-grid" id="themeGrid">
+          <button class="theme-card active" data-theme="dark-ai" type="button">
+            <span>Dark AI</span>
+            <small>Moody, sharp, futuristic</small>
+          </button>
+          <button class="theme-card" data-theme="gradient" type="button">
+            <span>Gradient</span>
+            <small>Calm contrast with color depth</small>
+          </button>
+        </div>
+
+        <button id="startButton" class="primary-button" type="button">Enter workspace</button>
+        <p id="authMessage" class="muted small"></p>
+      </div>
+    </div>
+
+    <div id="loadingScreen" class="overlay hidden">
+      <div class="panel loading-panel">
+        <p class="eyebrow">Preparing Workspace</p>
+        <h2>Loading your analyzer</h2>
+        <div class="progress-track">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
+        <p id="loadingLabel" class="muted">Initializing interface...</p>
+      </div>
+    </div>
+
+    <div id="appShell" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">RAG + LangChain Powered</p>
+          <h2>Resume Analyzer</h2>
+          <p id="sidebarGreeting" class="muted">Welcome back.</p>
+        </div>
+
+        <nav class="nav-tabs">
+          <button class="nav-link active" data-view="dashboard" type="button">Dashboard</button>
+          <button class="nav-link" data-view="about" type="button">About</button>
+        </nav>
+
+        <section class="api-card">
+          <div class="api-card-header">
+            <div>
+              <p class="eyebrow">API Key Bar</p>
+              <h3>Provider Access</h3>
+            </div>
+            <span class="status-pill" id="providerBadge">Gemini</span>
+          </div>
+
+          <div class="provider-switcher">
+            <button class="provider-button active" data-provider="gemini" type="button">Gemini</button>
+            <button class="provider-button" data-provider="groq" type="button">Groq</button>
+          </div>
+
+          <div class="provider-panel" id="geminiPanel">
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Open Gemini key page</a>
+            <label class="field compact">
+              <span>Gemini API Key</span>
+              <input id="geminiKey" type="password" placeholder="Paste Gemini key" />
+            </label>
+          </div>
+
+          <div class="provider-panel hidden" id="groqPanel">
+            <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">Open Groq key page</a>
+            <label class="field compact">
+              <span>Groq API Key</span>
+              <input id="groqKey" type="password" placeholder="Paste Groq key" />
+            </label>
+          </div>
+
+          <button id="saveKeysButton" class="secondary-button" type="button">Save key locally</button>
+          <p id="apiKeyMessage" class="muted small"></p>
+          <p class="muted small">Keys stay in this browser only.</p>
+        </section>
+      </aside>
+
+      <main class="content">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Smart Resume Review</p>
+            <h1 id="mainGreeting">Hello there</h1>
+            <p class="muted">
+              Upload your resume, build the vector base, add a job description, and launch analysis. Please read
+              the About section before operating the analyzer.
+            </p>
+          </div>
+        </section>
+
+        <section id="dashboardView" class="view active">
+          <div class="dashboard-grid">
+            <article class="panel">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Step 1</p>
+                  <h3>Upload Resume</h3>
+                </div>
+                <span class="status-pill" id="fileBadge">Waiting</span>
+              </div>
+              <p class="muted">Supported formats: PDF, DOCX, TXT.</p>
+              <input id="resumeInput" type="file" accept=".pdf,.docx,.txt" />
+              <button id="uploadButton" class="primary-button" type="button">Save file</button>
+              <p id="uploadMessage" class="muted small"></p>
+            </article>
+
+            <article class="panel">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Step 2</p>
+                  <h3>Build Data Vector Base</h3>
+                </div>
+                <span class="status-pill" id="vectorBadge">Not built</span>
+              </div>
+              <p class="muted">Chunk the resume and build a searchable retrieval base.</p>
+              <button id="vectorButton" class="secondary-button" type="button">Build vector base</button>
+              <p id="vectorMessage" class="muted small"></p>
+            </article>
+          </div>
+
+          <article class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Step 3</p>
+                <h3>Job Description</h3>
+              </div>
+              <span class="status-pill">Required</span>
+            </div>
+            <textarea
+              id="jobDescription"
+              rows="8"
+              placeholder="Paste the target job description here so the analyzer can compare the resume against it."
+            ></textarea>
+          </article>
+
+          <article class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Step 4</p>
+                <h3>Launch Analysis</h3>
+              </div>
+              <span class="status-pill" id="analysisBadge">Ready when you are</span>
+            </div>
+            <p class="muted">
+              The analyzer can use Gemini, Groq, or a built-in heuristic fallback if a provider key is not available.
+            </p>
+            <button id="analyzeButton" class="primary-button" type="button">Launch analysis</button>
+            <p id="analysisMessage" class="muted small"></p>
+          </article>
+
+          <section id="resultsPanel" class="results-grid hidden">
+            <article class="panel score-panel">
+              <p class="eyebrow">ATS Match Score</p>
+              <div class="score-ring">
+                <span id="scoreValue">0</span>
+              </div>
+              <p id="summaryText" class="muted"></p>
+            </article>
+
+            <article class="panel">
+              <p class="eyebrow">Strengths</p>
+              <ul id="strengthsList" class="clean-list"></ul>
+            </article>
+
+            <article class="panel">
+              <p class="eyebrow">Weaknesses</p>
+              <ul id="weaknessesList" class="clean-list"></ul>
+            </article>
+
+            <article class="panel">
+              <p class="eyebrow">Recommendations</p>
+              <ul id="recommendationsList" class="clean-list"></ul>
+            </article>
+
+            <article class="panel wide-panel">
+              <p class="eyebrow">Matching Keywords</p>
+              <div id="keywordCloud" class="keyword-cloud"></div>
+              <p id="providerUsed" class="muted small"></p>
+            </article>
+          </section>
+        </section>
+
+        <section id="aboutView" class="view">
+          <article class="panel">
+            <p class="eyebrow">How It Works</p>
+            <h3>Brief description</h3>
+            <p class="muted">
+              The system reads your resume, breaks it into smaller searchable parts, compares those parts with the job
+              description, and then generates a score with strengths, weaknesses, and practical improvement advice.
+            </p>
+          </article>
+
+          <article class="panel">
+            <p class="eyebrow">Flow Chart</p>
+            <p class="muted">
+              Follow these steps in order so the analyzer can read the file properly and give useful feedback.
+            </p>
+            <div class="flow-chart">
+              <div class="flow-node">
+                <strong>1. Upload resume</strong>
+                <small>Choose a PDF, DOCX, or TXT file and save it into the analyzer.</small>
+              </div>
+              <div class="flow-arrow">-&gt;</div>
+              <div class="flow-node">
+                <strong>2. Build vector base</strong>
+                <small>The system turns the resume into searchable chunks for better matching.</small>
+              </div>
+              <div class="flow-arrow">-&gt;</div>
+              <div class="flow-node">
+                <strong>3. Add job description</strong>
+                <small>Paste the target role so the analyzer knows what the resume should be compared against.</small>
+              </div>
+              <div class="flow-arrow">-&gt;</div>
+              <div class="flow-node">
+                <strong>4. Launch analysis</strong>
+                <small>Generate the score, strengths, weaknesses, and improvement guidance.</small>
+              </div>
+              <div class="flow-arrow">-&gt;</div>
+              <div class="flow-node">
+                <strong>5. Improve and retry</strong>
+                <small>Update the resume using the feedback, then run the analyzer again.</small>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Background Work</p>
+                <h3>System activity log</h3>
+              </div>
+              <button id="refreshActivityButton" class="secondary-button small-button" type="button">Refresh log</button>
+            </div>
+            <div id="activityLog" class="activity-log"></div>
+          </article>
+
+          <article class="panel">
+            <p class="eyebrow">Session Control</p>
+            <h3>Account actions</h3>
+            <p class="muted">
+              Log out to end this session and clear session-only API keys.
+            </p>
+            <div class="account-actions">
+              <button id="logoutButton" class="secondary-button small-button danger-button" type="button">Log out</button>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js?v=20260510b"></script>
+  </body>
+</html>
