@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import secrets
 import shutil
@@ -10,8 +11,14 @@ from typing import Any
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = ROOT_DIR / "data"
-UPLOADS_DIR = ROOT_DIR / "uploads"
+
+if os.environ.get("VERCEL"):
+    DATA_DIR = Path("/tmp/data")
+    UPLOADS_DIR = Path("/tmp/uploads")
+else:
+    DATA_DIR = ROOT_DIR / "data"
+    UPLOADS_DIR = ROOT_DIR / "uploads"
+
 USERS_DIR = DATA_DIR / "users"
 ACCOUNTS_PATH = DATA_DIR / "accounts.json"
 
